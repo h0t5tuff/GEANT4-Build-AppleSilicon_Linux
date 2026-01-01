@@ -16,6 +16,35 @@
 
 
 
+>export G4SRC=~/GEANT4/src
+>export G4BUILD=~/GEANT4/build-11.4-HDF5-xMTx
+>export G4INSTALL=~/GEANT4/install-11.4-HDF5-xMTx
+
+>rm -rf "$G4BUILD"
+>
+>mkdir -p "$G4BUILD"
+>
+>cd "$G4BUILD"
+>
+>cmake "$G4SRC" \
+  -DCMAKE_INSTALL_PREFIX="$G4INSTALL" \
+  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DGEANT4_BUILD_MULTITHREADED=OFF \
+  -DGEANT4_INSTALL_DATA=ON \
+  -DGEANT4_INSTALL_EXAMPLES=ON \
+  -DGEANT4_USE_SYSTEM_EXPAT=ON \
+  -DGEANT4_USE_GDML=ON \
+  -DGEANT4_USE_QT=ON \
+  -DGEANT4_USE_OPENGL=ON \
+  -DCMAKE_PREFIX_PATH="/opt/homebrew" \
+  -DGEANT4_USE_HDF5=ON \
+  -DHDF5_ROOT="$(brew --prefix hdf5)" 
+>
+>make -j"$(sysctl -n hw.ncpu)"
+>
+>make install
+
 
 
 
@@ -25,38 +54,24 @@
 
 ## Build an example
 
-Copy an example from src to my geant4 folder
-
->cd geant4
+>cd ~/GEANT4/src/examples
 >
->cp -R /Users/tensor/geant4/src/examples/basic/B1 ~/geant4/B1_Tensor
+>rm -rf build
 >
->cd ~/geant4examples/B1_tensor
-
-Build
-
 >mkdir build && cd build
-
-on mac
-
->// rm -rf build && mkdir build && cd build // if you wanna rebuild
 >
->cmake .. -DCMAKE_BUILD_TYPE=Release -DGeant4_DIR="$HOME/geant4/install/lib/cmake/Geant4" -DCMAKE_PREFIX_PATH="$(brew --prefix root):$HOME/geant4/install/lib/cmake/Geant4"
+>cmake .. -DGeant4_DIR="$Geant4_DIR"
 >
->// make clean //if you wanna remake
+>make -j"$(sysctl -n hw.ncpu)"
 >
->make -j$(sysctl -n hw.ncpu)
-
+>./<sim>
+>/control/execute <mac>
+>
+>./<sim> -m <mac>
 
 
 Check what was enabled during build
 >cat /Users/tensor/geant4/build/CMakeCache.txt | grep GEANT4_USE
 
-Confirm Geant4 Build Has Qt, OpenGL, GDML, CADMesh, etc
->$HOME/geant4/install/bin/geant4-config --features
 
-run Interactive session
->./exampleB1
 
-In Geant4 prompt
->/control/execute vis.mac
