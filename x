@@ -1,25 +1,25 @@
 -------APPLESILICON----------
 # DEPENDENCIES:
-echo "base tools"
+base tools:
 brew install python wget git make xerces-c
-echo "Build utilities"
+Build utilities:
 brew install cmake ninja pkgconf
-echo "graphics requirements"
+graphics requirements:
 brew install qt@5 libx11
 brew install --cask xquartz
-echo "root stuff"
+root stuff:
 brew install cfitsio davix fftw freetype ftgl gcc giflib gl2ps glew \
              graphviz gsl jpeg-turbo libpng libtiff lz4 mariadb-connector-c \
              nlohmann-json numpy openblas openssl pcre pcre2 python sqlite \
              tbb xrootd xxhash xz zstd
-echo "geant4 stuff"
+geant4 stuff:
 brew install clhep expat jpeg libxi libxmu open-mpi
-brew update && brew upgrade && brew autoremove && brew cleanup && brew doctor
+(make sure to build HDF5 first, see below.)
 # BUILD:
 mkdir GEANT4 && cd GEANT4
 git clone https://github.com/Geant4/geant4.git geant4
 cd geant4
-git fetch --tags
+git fetch --tags 
 git checkout geant4-11.4-release
 rm -rf build-11.4 && mkdir build-11.4 && cd build-11.4
 cmake ../geant4 \
@@ -34,15 +34,16 @@ cmake ../geant4 \
   -DGEANT4_USE_QT=ON \
   -DGEANT4_USE_OPENGL=ON \
   -DGEANT4_USE_HDF5=ON \
-  -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
-  -DHDF5_DIR="$HDF5_DIR" \
-  -DCMAKE_PREFIX_PATH="$HDF5_ROOT:/opt/homebrew"
+  -DHDF5_INCLUDE_DIRS="$HDF5_ROOT/include" \
+  -DHDF5_C_INCLUDE_DIR="$HDF5_ROOT/include" \
+  -DHDF5_HL_INCLUDE_DIR="$HDF5_ROOT/include" \
+  -DHDF5_LIBRARIES="$HDF5_ROOT/lib/libhdf5.dylib;$HDF5_ROOT/lib/libhdf5_hl.dylib" \
+  -DHDF5_C_LIBRARIES="$HDF5_ROOT/lib/libhdf5.dylib" \
+  -DHDF5_HL_LIBRARIES="$HDF5_ROOT/lib/libhdf5_hl.dylib" \
+  -DCMAKE_PREFIX_PATH="/opt/homebrew"
 make -j"$(sysctl -n hw.ncpu)"
 make install
-
-
-
-
+(-DHDF5_DIR="$HDF5_ROOT/cmake" did not work, so I set HDF5_LIBRARIES (and friends) explicitly... nightmare)
 
 ———————LINUX—————————
 DEPENDENCIES:
