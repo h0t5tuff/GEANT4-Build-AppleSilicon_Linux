@@ -1,18 +1,12 @@
 -------APPLESILICON----------
 # DEPENDENCIES:
-base tools:
-brew install python wget git make xerces-c
-Build utilities:
-brew install cmake ninja pkgconf
-graphics requirements:
-brew install qt@5 libx11
-brew install --cask xquartz
-root stuff:
+brew install python wget git make xerces-c cmake ninja pkgconf
+brew install qt libx11
+             --cask xquartz
 brew install cfitsio davix fftw freetype ftgl gcc giflib gl2ps glew \
              graphviz gsl jpeg-turbo libpng libtiff lz4 mariadb-connector-c \
              nlohmann-json numpy openblas openssl pcre pcre2 python sqlite \
              tbb xrootd xxhash xz zstd
-geant4 stuff:
 brew install clhep expat jpeg libxi libxmu open-mpi
 (make sure to build HDF5 first, see below.)
 # BUILD:
@@ -21,7 +15,9 @@ git clone https://github.com/Geant4/geant4.git geant4
 cd geant4
 git fetch --tags 
 git checkout geant4-11.4-release
+cd ..
 rm -rf build-11.4 && mkdir build-11.4 && cd build-11.4
+(-DHDF5_DIR="$HDF5_ROOT/cmake" did not work, so I set HDF5_LIBRARIES (and friends) explicitly)
 cmake ../geant4 \
   -DCMAKE_INSTALL_PREFIX=../install-11.4 \
   -DCMAKE_OSX_ARCHITECTURES=arm64 \
@@ -43,7 +39,6 @@ cmake ../geant4 \
   -DCMAKE_PREFIX_PATH="/opt/homebrew"
 make -j"$(sysctl -n hw.ncpu)"
 make install
-(-DHDF5_DIR="$HDF5_ROOT/cmake" did not work, so I set HDF5_LIBRARIES (and friends) explicitly... nightmare)
 
 ———————LINUX—————————
 DEPENDENCIES:
@@ -77,26 +72,34 @@ make -j"$(nproc)"
 make install
 
 —————————EXAMPLES———————
-cd ~/GEANT4/geant4/examples/basic/B1
-rm -rf build && mkdir build && cd build
 (on mac)
-cmake .. 
-  -DGeant4_DIR="$Geant4_DIR"
-make -j"$(sysctl -n hw.ncpu)"
+underground_physics  
+  shielding optimization and neutron moderation logic. Add a simple slab of material in DetectorConstruction. Compare rates/energy deposition downstream
+  cmake .. \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" \
+      -DWITH_GEANT4_UIVIS=ON \
+      -DDMXENV_GPS_USE=ON
+  make -j"$(sysctl -n hw.ncpu)"
+lAr_calorimeter       
+  LAr veto light collection sensitivity studies. Change scintillation yield and absorption length. Measure detected photoelectrons vs distance/geometry
+xray_fluorescence 
+  Pick a material. Fire gammas/electrons at a surface. Verify the fluorescence X-ray lines appear in the output energy spectrum background line ID and detector material response sanity checks.
+IAEAphsp  
+  realistic source generation, reusing precomputed distributions. Phase-space inputs. reproducible source modeling patterns.
+human_phantom
+  teaches geometry organization and run control.
+
 (on linux)
-cmake .. 
-  -DCMAKE_BUILD_TYPE=Release 
-  -DGeant4_DIR=/home/bacon/geant4/geant4_install/lib/cmake/Geant4 
+cmake .. \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DGeant4_DIR=/home/bacon/geant4/geant4_install/lib/cmake/Geant4 \
   -DCMAKE_PREFIX_PATH="/usr/local/Cellar/root/6.36.01;/home/bacon/geant4/geant4_install/lib/Geant4-11.3.1/cmake"
 make -j$(nproc)
 
+# run
 UI mode: ./<sim> ---> /control/execute <mac> 
 batch mode: ./<sim> -m <mac>
-
-
-
-
-
 
 
 
