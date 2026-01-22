@@ -48,11 +48,10 @@ make install
 underground_physics  
   shielding optimization and neutron moderation logic. Add a simple slab of material in DetectorConstruction. Compare rates/energy deposition downstream
   cmake .. \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" \
-      -DWITH_GEANT4_UIVIS=ON \
-      -DDMXENV_GPS_USE=ON
-  make -j"$(sysctl -n hw.ncpu)"
+    -DCMAKE_BUILD_TYPE=Release \
+    -DWITH_GEANT4_UIVIS=ON \
+    -DDMXENV_GPS_USE=ON \
+    -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" 
 lAr_calorimeter       
   LAr veto light collection sensitivity studies. Change scintillation yield and absorption length. Measure detected photoelectrons vs distance/geometry
 xray_fluorescence 
@@ -75,5 +74,9 @@ batch mode: ./<sim> -m <mac>
 
 
 
-
-
+# BaconCalibrationSimulation:
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DWITH_GEANT4_UIVIS=ON \
+  -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" 
+cmake --build build -j"$(sysctl -n hw.ncpu)"
