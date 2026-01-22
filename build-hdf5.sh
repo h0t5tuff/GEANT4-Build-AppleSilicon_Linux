@@ -11,9 +11,8 @@ set -euo pipefail
 # # chmod +x build-hdf5.sh && ./build-hdf5.sh
 
 # User-tunable knobs:
-HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
-REPO_DIR="$HDF5_WORKDIR/hdf5"
-THREADSAFE="${HDF5_ENABLE_THREADSAFE:-ON}"
+BUILD_DIR="$HDF5_WORKDIR/build2-$ver"
+INSTALL_DIR="$HDF5_WORKDIR/install2-$ver"
 MAKE_JOBS="${MAKE_JOBS:-$(sysctl -n hw.ncpu)}"
 
 # Prefer Ninja if installed, else Unix Makefiles
@@ -23,9 +22,11 @@ else
   GENERATOR="${GENERATOR:-Unix Makefiles}"
 fi
 
-mkdir -p "$HDF5_WORKDIR"
+HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
+# mkdir -p "$HDF5_WORKDIR"
+REPO_DIR="$HDF5_WORKDIR/hdf5"
 
-echo "== [1/5] Clone/update HDF5 repo =="
+echo "================== [1/5] Clone/update HDF5 repo =================="
 if [[ ! -d "$REPO_DIR/.git" ]]; then
   git clone https://github.com/HDFGroup/hdf5.git "$REPO_DIR"
 fi
@@ -33,7 +34,7 @@ fi
 cd "$REPO_DIR"
 git fetch --tags --prune origin
 
-echo "== [2/5] Select latest stable tag < 2.0.0 =="
+echo "================== [2/5] Select latest stable tag < 2.0.0 =================="
 # Stable tags look like: hdf5-1_14_3
 latest_tag="$(
   git tag -l 'hdf5-[0-9]_*' \
@@ -59,10 +60,10 @@ branch="release/$latest_tag"
 git switch -C "$branch" "$latest_tag"
 
 ver="$latest_tag"
-BUILD_DIR="$HDF5_WORKDIR/build-$ver"
-INSTALL_DIR="$HDF5_WORKDIR/install-$ver"
 
-echo "== [3/5] Configure + build + install HDF5 ($ver) =="
+cd ..
+
+echo "================== [3/5] Configure + build + install HDF5 ($ver) =================="
 rm -rf "$BUILD_DIR" "$INSTALL_DIR"
 mkdir -p "$BUILD_DIR" "$INSTALL_DIR"
 
@@ -70,7 +71,7 @@ cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=ON \
-  -DHDF5_ENABLE_THREADSAFE="$THREADSAFE" \
+  -DHDF5_ENABLE_THREADSAFE=ON \
   -DHDF5_BUILD_HL_LIB=OFF \
   -DHDF5_BUILD_CPP_LIB=OFF \
   -DHDF5_BUILD_FORTRAN=OFF \
@@ -81,24 +82,13 @@ cmake --build "$BUILD_DIR" -j"$MAKE_JOBS"
 cmake --install "$BUILD_DIR"
 
 
+echo "================== [4/5] Patch h5cc in-place (add -show) =================="
 
-# -------------------------------
-#  helpers
-HDF5_ROOT="$INSTALL_DIR"
-HDF5_DIR="$HDF5_ROOT/cmake"
-echo "== Post-install sanity: cmake config dir contents =="
+#  symlink helpers
 ls -1 "$HDF5_DIR" || true
-# Some projects expect canonical capitalized config filenames.
-# Make symlinks so both lowercase and uppercase work.
 ln -sf "$HDF5_DIR/hdf5-config.cmake"         "$HDF5_DIR/HDF5Config.cmake"
 ln -sf "$HDF5_DIR/hdf5-config-version.cmake" "$HDF5_DIR/HDF5ConfigVersion.cmake"
-# Avoid stale cached values from the environment (helps when reconfiguring repeatedly)
-unset HDF5_INCLUDE_DIRS HDF5_LIBRARIES HDF5_C_LIBRARY HDF5_HL_LIBRARY || true
-# --------------------------------
 
-
-
-echo "== [4/5] Patch h5cc in-place (add -show) =="
 HDF5_ROOT="$INSTALL_DIR"
 H5CC="$HDF5_ROOT/bin/h5cc"
 REAL="$HDF5_ROOT/bin/h5cc.real"
@@ -161,7 +151,7 @@ echo "h5cc -show:"
 "$H5CC" -show | head -n 1
 echo
 
-echo "== [5/5] Quick CMake find test =="
+echo "================== [5/5] Quick CMake find test =================="
 TEST_DIR="$(mktemp -d /tmp/hdf5-findtest.XXXXXX)"
 cat > "$TEST_DIR/CMakeLists.txt" <<EOF
 cmake_minimum_required(VERSION 3.16)
@@ -200,7 +190,3 @@ echo "SUCCESS."
 echo "Installed HDF5 root:"
 echo "  $HDF5_ROOT"
 echo
-echo "To use it in your shell:"
-echo "  export HDF5_ROOT=\"$HDF5_ROOT\""
-echo "  export HDF5_DIR=\"$HDF5_ROOT/cmake\""
-echo "  export PKG_CONFIG_PATH=\"$HDF5_ROOT/lib/pkgconfig:\${PKG_CONFIG_PATH:-}\""
