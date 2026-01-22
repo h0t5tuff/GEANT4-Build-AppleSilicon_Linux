@@ -8,6 +8,8 @@ set -euo pipefail
 #   4) patch h5cc in-place to support -show (for CMake FindHDF5)
 #   5) quick CMake find test (find_package(HDF5) + compile dummy)
 
+# # chmod +x build-hdf5.sh && ./build-hdf5.sh
+
 # User-tunable knobs:
 HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
 REPO_DIR="$HDF5_WORKDIR/hdf5"

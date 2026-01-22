@@ -7,6 +7,8 @@ set -euo pipefail
 #   3) build+install GEANT4
 #   5) quick CMake find test (find_package(GEANT4) + compile dummy)
 
+# # chmod +x build-geant4.sh && ./build-geant4.sh
+
 # User-tunable knobs:
 GEANT4_WORKDIR="${GEANT4_WORKDIR:-$HOME/GEANT4}"
 REPO_DIR="$GEANT4_WORKDIR/geant4"
