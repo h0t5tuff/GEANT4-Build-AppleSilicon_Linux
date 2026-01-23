@@ -16,40 +16,33 @@ I developed these scripts to give collaborators a **single, reliable way to buil
 
 ## Dependency stack
 
-┌─────────────────────────────┐
-│ remage │
-│ (LEGEND simulation layer) │
-└───────────────┬─────────────┘
-│
+REMAGE 
+(LEGEND simulation layer) 
+
+ ▼
+
+BXDECAY0 
+(external generator) 
+
 ▼
-┌─────────────────────────────┐
-│ BxDecay0 │
-│ (external generator) │
-└───────────────┬─────────────┘
-│
+
+GEANT4 
+(MT, GDML, HDF5, ROOT I/O) 
+
 ▼
-┌─────────────────────────────┐
-│ Geant4 │
-│ (MT, GDML, HDF5, ROOT I/O) │
-└───────────────┬─────────────┘
-│
+
+HDF5 
+(1.x, C++, thread-safe) 
+
 ▼
-┌─────────────────────────────┐
-│ HDF5 │
-│ (1.x, C++, thread-safe) │
-└───────────────┬─────────────┘
-│
+
+ROOT 
+(via Homebrew) 
+
 ▼
-┌─────────────────────────────┐
-│ ROOT │
-│ (via Homebrew) │
-└───────────────┬─────────────┘
-│
-▼
-┌─────────────────────────────┐
-│ system / Homebrew │
-│ (clang, CMake, pkg-config) │
-└─────────────────────────────┘
+
+system / Homebrew
+(clang, CMake, pkg-config)
 
 ---
 
