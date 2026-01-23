@@ -8,9 +8,11 @@ set -euo pipefail
 #   4) patch h5cc in-place to support -show (for CMake FindHDF5)
 #   5) quick CMake find test (find_package(HDF5) + compile dummy)
 
-# # chmod +x build-hdf5.sh && ./build-hdf5.sh
+#  chmod +x build-hdf5.sh && ./build-hdf5.sh
 
 # User-tunable knobs:
+HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
+REPO_DIR="$HDF5_WORKDIR/hdf5"
 BUILD_DIR="$HDF5_WORKDIR/build2-$ver"
 INSTALL_DIR="$HDF5_WORKDIR/install2-$ver"
 MAKE_JOBS="${MAKE_JOBS:-$(sysctl -n hw.ncpu)}"
@@ -22,9 +24,9 @@ else
   GENERATOR="${GENERATOR:-Unix Makefiles}"
 fi
 
-HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
+
 # mkdir -p "$HDF5_WORKDIR"
-REPO_DIR="$HDF5_WORKDIR/hdf5"
+
 
 echo "================== [1/5] Clone/update HDF5 repo =================="
 if [[ ! -d "$REPO_DIR/.git" ]]; then
@@ -143,28 +145,29 @@ case "${1:-}" in
 esac
 EOF
 chmod +x "$H5CC"
-
-echo "Patched wrapper: $H5CC"
-echo "Backup saved as : $REAL"
 echo
 echo "h5cc -show:"
 "$H5CC" -show | head -n 1
+
+
+
 echo
+echo "SUCCESS."
+echo "Installed HDF5:"
+echo "  $HDF5_ROOT"
 
 echo "================== [5/5] Quick CMake find test =================="
+
 TEST_DIR="$(mktemp -d /tmp/hdf5-findtest.XXXXXX)"
+
 cat > "$TEST_DIR/CMakeLists.txt" <<EOF
 cmake_minimum_required(VERSION 3.16)
 project(hdf5_findtest C)
-
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
-
 # Ensure CMake can see the installed HDF5 config + pkg-config files
 set(HDF5_ROOT "$HDF5_ROOT")
 set(CMAKE_PREFIX_PATH "\${HDF5_ROOT};\${CMAKE_PREFIX_PATH}")
-
 find_package(HDF5 REQUIRED COMPONENTS C)
-
 add_executable(hdf5_findtest main.c)
 target_include_directories(hdf5_findtest PRIVATE \${HDF5_INCLUDE_DIRS})
 target_link_libraries(hdf5_findtest PRIVATE \${HDF5_LIBRARIES})
@@ -179,14 +182,10 @@ int main(void) {
 }
 EOF
 
-cmake -S "$TEST_DIR" -B "$TEST_DIR/build" -G "$GENERATOR" \
+cmake -S "$TEST_DIR" -B "$TEST_DIR/build" \
   -DCMAKE_PREFIX_PATH="$HDF5_ROOT"
+cmake --build "$TEST_DIR/build" -j"$(sysctl -n hw.ncpu)"
 
-cmake --build "$TEST_DIR/build" -j"$MAKE_JOBS"
-"$TEST_DIR/build/hdf5_findtest"
 
-echo
-echo "SUCCESS."
-echo "Installed HDF5 root:"
-echo "  $HDF5_ROOT"
-echo
+
+
