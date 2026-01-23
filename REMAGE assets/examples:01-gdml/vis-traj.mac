@@ -1,0 +1,42 @@
+# Run from UI with: /control/execute vis-traj.mac
+
+# diagnostic switches
+/control/verbose 1
+/vis/verbose 1
+
+/run/initialize
+
+# Open Qt OpenGL viewer
+/vis/open OGLIQt
+
+# Draw geometry first
+/vis/drawVolume
+
+# Force solids rendering
+/vis/geometry/set/forceSolid Detector
+/vis/geometry/set/forceSolid Source_Encapsulated
+
+# Viewer styling
+/vis/viewer/set/background black
+/vis/viewer/set/defaultColour white
+/vis/viewer/set/style surface
+
+# Enable trajectory storage + display
+/tracking/storeTrajectory 1
+/vis/scene/add/trajectories smooth
+/vis/scene/add/hits
+/vis/scene/endOfEventAction accumulate
+
+# REMAGE generator
+/RMG/Generator/Confine Volume
+/RMG/Generator/Confinement/Physical/AddVolume Source_Encapsulated_PV
+
+/RMG/Generator/Select GPS
+/gps/particle ion
+/gps/ion 27 60
+/gps/energy 0 eV
+
+/run/beamOn 100
+
+# Render
+/vis/viewer/flush

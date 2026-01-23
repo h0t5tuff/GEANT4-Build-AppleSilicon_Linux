@@ -1,0 +1,23 @@
+# Run from UI with: /control/execute vis-cutaway.mac
+
+# diagnostic switches
+/control/verbose 1
+/vis/verbose 1
+
+/run/initialize
+
+# Open Qt OpenGL viewer
+/vis/open OGLIQt
+
+# Draw geometry
+/vis/drawVolume
+
+# Viewer styling
+/vis/viewer/set/background black
+/vis/viewer/set/style surface
+
+# Cutaway plane: point (0,0,0) and normal (1,0,0) in meters
+/vis/viewer/addCutawayPlane 0 0 0 m 1 0 0
+
+# Render
+/vis/viewer/flush
