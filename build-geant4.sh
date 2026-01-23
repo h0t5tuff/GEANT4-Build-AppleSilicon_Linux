@@ -12,20 +12,11 @@ set -euo pipefail
 # Run:
 #   chmod +x build-geant4.sh
 #   ./build-geant4.sh
-
-# Features:
-#  - interactive choices
-#  - retry build to survive flaky dataset downloads
-#  - ~/.zshrc GEANT4_BASE update
 ###############################################################################
 
-# -----------------------------
-# helpers
-# -----------------------------
 tolower() { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
 ask_yn() {
-  # usage: ask_yn "Question?" default(Y/N)
   local q="$1" d="$2" a
   read -r -p "$q " a || true
   a="$(tolower "${a:-}")"
@@ -37,7 +28,7 @@ ask_yn() {
 }
 
 # -----------------------------
-# preflights
+# preflight
 # -----------------------------
 echo "Preflight: Homebrew"
 if command -v brew >/dev/null 2>&1; then
@@ -74,7 +65,6 @@ echo "HDF5_DIR =$HDF5_DIR"
 "$HDF5_ROOT/bin/h5cc" -showconfig | egrep -i "HDF5 Version|Threadsafety" || true
 echo
 
-
 # -----------------------------
 # User choices
 # -----------------------------
@@ -90,11 +80,8 @@ if [[ -n "$SUFFIX" && ! "$SUFFIX" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-
 ZSHRC="$HOME/.zshrc"
 DO_UPDATE_ZSHRC="no"
-
-echo
 read -r -p "After install, update ~/.zshrc GEANT4_BASE to this install? [Y/n]: " ans
 ans="${ans:-Y}"
 if [[ "$ans" =~ ^[Yy]$ ]]; then
@@ -140,7 +127,6 @@ if command -v ninja >/dev/null 2>&1; then
 else
   GENERATOR="${GENERATOR:-Unix Makefiles}"
 fi
-
 
 cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DCMAKE_BUILD_TYPE=Release \
@@ -189,9 +175,6 @@ cmake --install "$BUILD_DIR"
 echo "Installed to $INSTALL_DIR"
 echo
 
-
-
-
 # -----------------------------
 # Update ~/.zshrc
 # -----------------------------
@@ -229,11 +212,6 @@ EOF
   export Geant4_DIR="$GEANT4_BASE/lib/cmake/Geant4"
 fi
 
-
-
-
-
-
 # -----------------------------
 # Quick test
 # -----------------------------
@@ -262,6 +240,15 @@ cmake --build "$TESTDIR/build" -j"$JOBS"
 
 echo "Linkage check:"
 otool -L "$TESTDIR/build/g4test" | egrep 'G4analysis|hdf5' || true
+
+
+
+
+
+
+
+
+
 
 echo
 echo "DONE: Geant4 $VER ready"

@@ -2,8 +2,6 @@
 set -euo pipefail
 
 ###############################################################################
-# build-hdf5.sh  (matches your geant4-build.sh style)
-#
 #   1) optional Homebrew deps
 #   2) clone/update HDF5 repo
 #   3) checkout latest stable 1.x tag (pre-2.0)
@@ -18,13 +16,9 @@ set -euo pipefail
 #   ./build-hdf5.sh
 ###############################################################################
 
-# -----------------------------
-# helpers
-# -----------------------------
 tolower() { echo "$1" | tr '[:upper:]' '[:lower:]'; }
 
 ask_yn() {
-  # usage: ask_yn "Question?" default(Y/N)
   local q="$1" d="$2" a
   read -r -p "$q " a || true
   a="$(tolower "${a:-}")"
@@ -36,7 +30,7 @@ ask_yn() {
 }
 
 # -----------------------------
-# preflight: Homebrew
+# preflight
 # -----------------------------
 echo "Preflight: Homebrew"
 if command -v brew >/dev/null 2>&1; then
@@ -67,18 +61,10 @@ fi
 
 ZSHRC="$HOME/.zshrc"
 DO_UPDATE_ZSHRC="no"
-read -r -p "After install, update ~/.zshrc HDF5_ROOT/HDF5_DIR to this install? [Y/n]: " ans || true
+read -r -p "After install, update ~/.zshrc HDF5_DIR to this install? [Y/n]: " ans
 ans="${ans:-Y}"
 if [[ "$ans" =~ ^[Yy]$ ]]; then
   DO_UPDATE_ZSHRC="yes"
-fi
-echo
-
-# Prefer Ninja if installed, else Unix Makefiles
-if command -v ninja >/dev/null 2>&1; then
-  GENERATOR="${GENERATOR:-Ninja}"
-else
-  GENERATOR="${GENERATOR:-Unix Makefiles}"
 fi
 
 # -----------------------------
@@ -132,6 +118,15 @@ INSTALL_DIR="$HDF5_WORKDIR/install-$VER${SUFFIX:+-$SUFFIX}"
 
 rm -rf "$BUILD_DIR" "$INSTALL_DIR"
 mkdir -p "$BUILD_DIR" "$INSTALL_DIR"
+
+# choose generator
+if command -v ninja >/dev/null 2>&1; then
+  GENERATOR="${GENERATOR:-Ninja}"
+else
+  GENERATOR="${GENERATOR:-Unix Makefiles}"
+fi
+
+
 
 cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
@@ -224,23 +219,20 @@ fi
 unset HDF5_INCLUDE_DIRS HDF5_LIBRARIES HDF5_C_LIBRARY HDF5_HL_LIBRARY || true
 echo
 
-
-
 # -----------------------------
-# Update ~/.zshrc + source it (zsh-only)
+# Update ~/.zshrc
 # -----------------------------
 if [[ "${DO_UPDATE_ZSHRC:-no}" == "yes" ]]; then
+  ZSHRC="${ZSHRC:-$HOME/.zshrc}"
+
   [[ -f "$ZSHRC" ]] || : > "$ZSHRC"
 
-  echo "Updating ~/.zshrc HDF5_ROOT/HDF5_DIR -> $HDF5_ROOT"
+  echo "Updating existing HDF5_ROOT in ~/.zshrc -> $HDF5_ROOT"
 
   tmp="$(mktemp)"
-
-  # Update or append HDF5_ROOT
   if grep -qE '^[[:space:]]*export[[:space:]]+HDF5_ROOT=' "$ZSHRC"; then
     sed -E "s|^[[:space:]]*export[[:space:]]+HDF5_ROOT=.*$|export HDF5_ROOT=\"$HDF5_ROOT\"|g" \
       "$ZSHRC" > "$tmp"
-    mv "$tmp" "$ZSHRC"
   else
     cat "$ZSHRC" > "$tmp"
     cat >> "$tmp" <<EOF
@@ -253,38 +245,13 @@ export HDF5_DIR="\$HDF5_ROOT/cmake"
 path=("\$HDF5_ROOT/bin" \$path)
 export PKG_CONFIG_PATH="\$HDF5_ROOT/lib/pkgconfig:\${PKG_CONFIG_PATH:-}"
 EOF
-    mv "$tmp" "$ZSHRC"
   fi
-
-  # Ensure HDF5_DIR matches
-  tmp="$(mktemp)"
-  if grep -qE '^[[:space:]]*export[[:space:]]+HDF5_DIR=' "$ZSHRC"; then
-    sed -E "s|^[[:space:]]*export[[:space:]]+HDF5_DIR=.*$|export HDF5_DIR=\"\$HDF5_ROOT/cmake\"|g" \
-      "$ZSHRC" > "$tmp"
-    mv "$tmp" "$ZSHRC"
-  else
-    rm -f "$tmp" || true
-  fi
-
+  mv "$tmp" "$ZSHRC"
   echo "~/.zshrc updated."
 
-  # Re-export for current script environment
   export HDF5_ROOT="$HDF5_ROOT"
   export HDF5_DIR="$HDF5_ROOT/cmake"
-
-  # IMPORTANT: don't `source ~/.zshrc` inside bash (causes setopt errors).
-  # Instead: run a login zsh to source it.
-  echo "Reloading ~/.zshrc via zsh..."
-  zsh -lc "source \"$HOME/.zshrc\" >/dev/null 2>&1 || true"
 fi
-
-
-
-
-
-
-
-
 
 # -----------------------------
 # Quick CMake find test
@@ -324,6 +291,9 @@ cmake --build "$TESTDIR/build" -j"$JOBS"
 echo "Test run:"
 "$TESTDIR/build/hdf5test" || true
 echo
+
+
+
 
 
 echo

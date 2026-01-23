@@ -1,4 +1,48 @@
-#build:
+# geant4
+
+
+# BaconCalibrationSimulation:
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DWITH_GEANT4_UIVIS=ON \
+  -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" 
+cmake --build build -j"$(sysctl -n hw.ncpu)"
+
+# underground_physics  
+  shielding optimization and neutron moderation logic. Add a simple slab of material in DetectorConstruction. Compare rates/energy deposition downstream
+cmake -S . -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DWITH_GEANT4_UIVIS=ON \
+    -DDMXENV_GPS_USE=ON \
+    -DCMAKE_PREFIX_PATH="$(geant4-config --prefix);$ROOT_DIR" 
+cmake --build build -j"$(sysctl -n hw.ncpu)"
+
+# lAr_calorimeter       
+  LAr veto light collection sensitivity studies. Change scintillation yield and absorption length. Measure detected photoelectrons vs distance/geometry
+
+# xray_fluorescence 
+  Pick a material. Fire gammas/electrons at a surface. Verify the fluorescence X-ray lines appear in the output energy spectrum background line ID and detector material response sanity checks.
+
+# IAEAphsp  
+  realistic source generation, reusing precomputed distributions. Phase-space inputs. reproducible source modeling patterns.
+
+# human_phantom
+  teaches geometry organization and run control.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#remage:
 rm -f *.root 
 rm -f *.hdf5
 rm -rf build
