@@ -1,5 +1,59 @@
-# geant4
+--------------------------------ROOT--------------------------------
+——Bacon2Data———
+#Build:
+  git clone --branch runTwo https://github.com/liebercanis/bacon2Data.git
+  cd bacon2Data && git pull
+  //git fetch origin && git reset --hard origin/runTwo && git clean -fdx 
+#create symlink:
+  cd bobj
+  (symlink on mac) 
+  ln -s /opt/homebrew/opt/root/etc/root/Makefile.arch .     
+  (symlink on linux)
+  ln -s /snap/root-framework/current/usr/local/etc/Makefile.arch .     
+#hard code path if you're not cloning in your home dir:
+  cd bobj 
+  nano makefile
+    INSTALLNAME  :=  $(HOME)/ROOT/bacon2Data/bobj/$(LIBRARY) 
+#build:
+  make clean; make
+  cd ../compiled && make clean; make
+#create data dirs and put btbSim and anacg files there:
+  #(on mac in compiled)
+  mkdir caenData
+  mkdir rootData   
+  #(on linux in compiled and in bacon2Data)
+  ln -s /mnt/Data2/BaconRun5Data/rootData/ rootData
+  ln -s /mnt/Data2/BaconRun4Data/caenData/ caenData
+  ln -s /home/gold/bacon2Data/compiled/ compiledGold 
+  ln -s /home/gold/bacon2Data/bobj/ bobjGold 
+# put gains files in bobj then symlink 'em in place to be used by postAna:
+  ln -s <gainPeak root file> gainPeakCurrent.root
+  ln -s <gainSum root file> gainSumCurrent.root
+# Run Excutables:
+  (on mac)
+  cd compiled
+  btbSim <events number>  // then copy root file to /rootData
+  anacg <root file from btbSim>   // product root file lives in /caenData
+  postAna <etag> <etag> <max entries>  // first change put a summary or post root file in /compiled, then summary or post root file name in gain.C & gainSum.C ln288
+  (on linux)
+  cd bacon2Data
+  nohup ./anacDir.py 00_00_0000 >& anacDir00_00_0000.log &
+  top   
+----BACONMONITOR-----
+On mac:
+  xhost +SI:localuser:root 
+On daq (via ssh):
+  ln -s /home/bacon/BaconMonitor/BaconMonitor2_tensor.py /home/Tensor/BaconMonitor2_tensor.py
+  sudo visudo
+	Tensor ALL=(ALL) NOPASSWD: SETENV: /usr/bin/python3 /home/Tensor/BaconMonitor2_tensor.py
 
+
+
+
+
+
+
+--------------------------------GEANT4--------------------------------
 
 # BaconCalibrationSimulation:
 cmake -S . -B build -G Ninja \
@@ -40,9 +94,8 @@ cmake --build build -j"$(sysctl -n hw.ncpu)"
 
 
 
+--------------------------------REMAGE--------------------------------
 
-
-#remage:
 rm -f *.root 
 rm -f *.hdf5
 rm -rf build
@@ -129,18 +182,7 @@ batch-mode: ./build/<sim> <mac>
 
 
 
-
-
-
-
 # examples/07-my-legend-study:
-
-
-
-
-
-
-
 
 
 
@@ -185,21 +227,3 @@ LEGEND-200:
 
 
 
-mkdir -p REMAGE && cd REMAGE
-git clone https://github.com/legend-exp/remage.git
-rm -rf build
-cmake -S remage -B build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX="$REMAGE_PREFIX" \
-  -DCMAKE_OSX_ARCHITECTURES=arm64 \
-  -DPython3_EXECUTABLE="$Python3_EXECUTABLE" \
-  -DBUILD_TESTING=ON \
-  -DROOT_DIR="$ROOT_DIR" \
-  -DHDF5_DIR="$HDF5_DIR" \
-  -DHDF5_ROOT="$HDF5_ROOT" \
-  -DGeant4_DIR="$Geant4_DIR" \
-  -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
-  -DCMAKE_PREFIX_PATH="$HDF5_ROOT;$BXDECAY0_PREFIX;$GEANT4_BASE;/opt/homebrew/opt/root;/opt/homebrew" 
-cmake --build build -j"$(sysctl -n hw.ncpu)"
-ctest --test-dir build --output-on-failure
-cmake --install build

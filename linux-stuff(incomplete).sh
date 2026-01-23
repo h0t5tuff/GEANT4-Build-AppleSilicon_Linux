@@ -1,20 +1,7 @@
 
 
+------------geant4---------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-———————LINUX—————————
 # DEPENDENCIES:
 sudo apt update
 sudo apt install -y \
@@ -44,7 +31,7 @@ cmake "$G4SRC" \
     -DGEANT4_USE_SYSTEM_CLHEP=ON
 make -j"$(nproc)"
 make install
-# ex:
+# example:
 cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DGeant4_DIR=/home/bacon/geant4/geant4_install/lib/cmake/Geant4 \
