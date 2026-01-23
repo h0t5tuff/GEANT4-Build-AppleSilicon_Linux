@@ -2,12 +2,12 @@
 set -euo pipefail
 
 ###############################################################################
-#   1) ensure Homebrew deps (install missing only)
+#   1) ensure Homebrew deps
 #   2) clone/update Geant4 repo
 #   3) checkout latest stable tag
 #   4) configure + build (with retries) + install
 #   5) quick CMake test (find_package(Geant4) + link G4analysis)
-#   6) update ~/.zshrc Geant4 block (idempotent)
+#   6) update ~/.zshrc Geant4 block
 #
 # Run:
 #   chmod +x build-geant4.sh
@@ -15,7 +15,6 @@ set -euo pipefail
 
 # Features:
 #  - interactive choices
-#  - HDF5 preflight
 #  - retry build to survive flaky dataset downloads
 #  - ~/.zshrc GEANT4_BASE update
 ###############################################################################
@@ -141,8 +140,7 @@ if command -v ninja >/dev/null 2>&1; then
 else
   GENERATOR="${GENERATOR:-Unix Makefiles}"
 fi
-#GENERATOR="Unix Makefiles"
-#command -v ninja >/dev/null 2>&1 && GENERATOR="Ninja"
+
 
 cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DCMAKE_BUILD_TYPE=Release \
@@ -194,49 +192,47 @@ echo
 
 
 
-
-
 # -----------------------------
 # Update ~/.zshrc
 # -----------------------------
-if [[ "$DO_UPDATE_ZSHRC" == "yes" ]]; then
-  if [[ ! -f "$ZSHRC" ]]; then
-    echo "Creating $ZSHRC"
-    touch "$ZSHRC"
-  fi
+if [[ "${DO_UPDATE_ZSHRC:-no}" == "yes" ]]; then
+  ZSHRC="${ZSHRC:-$HOME/.zshrc}"
 
-  if grep -q '^export GEANT4_BASE=' "$ZSHRC"; then
-    echo "Updating existing GEANT4_BASE in ~/.zshrc -> $INSTALL_DIR"
-    tmp="$(mktemp)"
-    sed "s|^export GEANT4_BASE=.*|export GEANT4_BASE=\"$INSTALL_DIR\"|" "$ZSHRC" > "$tmp"
-    mv "$tmp" "$ZSHRC"
+  [[ -f "$ZSHRC" ]] || : > "$ZSHRC"
+
+  echo "Updating existing GEANT4_BASE in ~/.zshrc -> $INSTALL_DIR"
+
+  tmp="$(mktemp)"
+  if grep -qE '^[[:space:]]*export[[:space:]]+GEANT4_BASE=' "$ZSHRC"; then
+    sed -E "s|^[[:space:]]*export[[:space:]]+GEANT4_BASE=.*$|export GEANT4_BASE=\"$INSTALL_DIR\"|g" \
+      "$ZSHRC" > "$tmp"
   else
-    echo "Adding GEANT4_BASE to ~/.zshrc -> $INSTALL_DIR"
-    {
-      echo ""
-      echo "# Geant4"
-      echo "export GEANT4_BASE=\"$INSTALL_DIR\""
-      echo "if [[ -f \"\$GEANT4_BASE/bin/geant4.sh\" ]]; then"
-      echo "  source \"\$GEANT4_BASE/bin/geant4.sh\""
-      echo "fi"
-      echo "export Geant4_DIR=\"\$GEANT4_BASE/lib/cmake/Geant4\""
-      echo "export G4VIS_DEFAULT_DRIVER=OGLSQt"
-    } >> "$ZSHRC"
+    cat "$ZSHRC" > "$tmp"
+    cat >> "$tmp" <<EOF
+
+# ╭───────────────────────────────╮
+# │     🧬 Geant4                 │
+# ╰───────────────────────────────╯
+export GEANT4_BASE="$INSTALL_DIR"
+if [[ -f "\$GEANT4_BASE/bin/geant4.sh" ]]; then
+  source "\$GEANT4_BASE/bin/geant4.sh"
+fi
+export Geant4_DIR="\$GEANT4_BASE/lib/cmake/Geant4"
+path=("$GEANT4_BASE/bin" $path)
+export G4VIS_DEFAULT_DRIVER=OGLSQt
+EOF
   fi
+  mv "$tmp" "$ZSHRC"
+  echo "~/.zshrc updated."
 
-  echo "~/.zshrc updated. Restart shell or run: source ~/.zshrc"
+  export GEANT4_BASE="$INSTALL_DIR"
+  export Geant4_DIR="$GEANT4_BASE/lib/cmake/Geant4"
 fi
 
 
 
-# -----------------------------
-# Reload shell environment
-# -----------------------------
-if [[ "$DO_UPDATE_ZSHRC" == "yes" ]]; then
-  echo "Reloading ~/.zshrc"
-  # shellcheck disable=SC1090
-  source "$HOME/.zshrc"
-fi
+
+
 
 # -----------------------------
 # Quick test
@@ -269,7 +265,3 @@ otool -L "$TESTDIR/build/g4test" | egrep 'G4analysis|hdf5' || true
 
 echo
 echo "DONE: Geant4 $VER ready"
-
-
-
-
