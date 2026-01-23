@@ -14,42 +14,42 @@ I developed these scripts to give collaborators a **single, reliable way to buil
 
 ---
 
-## Dependency stack (minimal)
+## Dependency stack
 
-+—————————–+
-| remage |
-| (LEGEND simulation layer) |
-+–––––––+–––––––+
-|
-v
-+–––––––+–––––––+
-| Bxdecay0 |
-| (dependency) |
-+–––––––+–––––––+
-|
-v
-+–––––––+–––––––+
-| Geant4 |
-| (MT, GDML, HDF5 and root analysis) |
-+–––––––+–––––––+
-|
-v
-+–––––––+–––––––+
-| HDF5 |
-| (1.x, C++, thread-safe) |
-+–––––––+–––––––+
-|
-v
-+–––––––+–––––––+
-| Root |
-| (from homebrew) |
-+–––––––+–––––––+
-|
-v
-+—————————–+
-| system / homebrew |
-| (clang, CMake, pkg-config) |
-+—————————–+
+┌─────────────────────────────┐
+│ remage │
+│ (LEGEND simulation layer) │
+└───────────────┬─────────────┘
+│
+▼
+┌─────────────────────────────┐
+│ BxDecay0 │
+│ (external generator) │
+└───────────────┬─────────────┘
+│
+▼
+┌─────────────────────────────┐
+│ Geant4 │
+│ (MT, GDML, HDF5, ROOT I/O) │
+└───────────────┬─────────────┘
+│
+▼
+┌─────────────────────────────┐
+│ HDF5 │
+│ (1.x, C++, thread-safe) │
+└───────────────┬─────────────┘
+│
+▼
+┌─────────────────────────────┐
+│ ROOT │
+│ (via Homebrew) │
+└───────────────┬─────────────┘
+│
+▼
+┌─────────────────────────────┐
+│ system / Homebrew │
+│ (clang, CMake, pkg-config) │
+└─────────────────────────────┘
 
 ---
 
