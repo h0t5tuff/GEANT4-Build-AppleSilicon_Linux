@@ -47,7 +47,7 @@ echo
 # -----------------------------
 # User choices
 # -----------------------------
-HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/HDF5}"
+HDF5_WORKDIR="${HDF5_WORKDIR:-$HOME/Documents/HDF5}"
 
 if ask_yn "Create workdir '$HDF5_WORKDIR'? [Y/n]:" "Y"; then
   mkdir -p "$HDF5_WORKDIR"

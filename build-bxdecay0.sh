@@ -51,7 +51,7 @@ echo
 # -----------------------------
 # User choices
 # -----------------------------
-BXDECAY0_HOME="${BXDECAY0_HOME:-$HOME/BXDECAY0}"
+BXDECAY0_HOME="${BXDECAY0_HOME:-$HOME/Documents/BXDECAY0}"
 
 if ask_yn "Create workdir '$BXDECAY0_HOME'? [Y/n]:" "Y"; then
   mkdir -p "$BXDECAY0_HOME"

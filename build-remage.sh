@@ -55,7 +55,7 @@ if ! ls "$HDF5_ROOT/lib"/libhdf5_cpp* >/dev/null 2>&1; then
 fi
 
 echo "User choices"
-REMAGE_WORKDIR="${REMAGE_WORKDIR:-$HOME/REMAGE}"
+REMAGE_WORKDIR="${REMAGE_WORKDIR:-$HOME/Documents/REMAGE}"
 if ask_yn "Create workdir '$REMAGE_WORKDIR'? [Y/n]:" "Y"; then
   mkdir -p "$REMAGE_WORKDIR"
 fi

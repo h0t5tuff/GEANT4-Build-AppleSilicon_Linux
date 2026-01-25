@@ -68,7 +68,7 @@ echo
 # -----------------------------
 # User choices
 # -----------------------------
-GEANT4_WORKDIR="${GEANT4_WORKDIR:-$HOME/GEANT4}"
+GEANT4_WORKDIR="${GEANT4_WORKDIR:-$HOME/Documents/GEANT4}"
 
 if ask_yn "Create workdir '$GEANT4_WORKDIR'? [Y/n]:" "Y"; then
   mkdir -p "$GEANT4_WORKDIR"
