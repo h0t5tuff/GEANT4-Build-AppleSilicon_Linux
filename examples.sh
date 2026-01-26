@@ -54,8 +54,59 @@ On daq (via ssh):
 
 
 --------------------------------GEANT4--------------------------------
-
 # BaconCalibrationSimulation:
+Debugging Log: Getting `BACONCalibrationSimulation` (Geant4) Running
+Here I document a successful problem-solving session of Alex's sim, BACONCalibrationSimulation. Including:
+header scoping fixes,
+STL file path handling,
+env-based root file path flexibility
+final sim launch.
+1. Geant4 Header Scoping Error, `G4Track` Undefined
+Issue: unknown type name ‘G4Track’
+That's because recent Geant4 versions require explicit inclusion of class headers. so any forward declarations or umbrella includes are no longer sufficient.
+Fix:
+I explicitly forward declare in the header `HistoManager.hh` then I include the real header in `HistoManager.cc`
+```cpp
+class G4Track;
+and
+#include "G4Track.hh"
+```
+2. STL File Rejection – CADMesh Expects ASCII Format
+Issue: CADMesh has error around line 1 that the STL file start with 'solid'
+Diagnosing this, I initially thought the stl file is binary instead of ASCII , or maybe that path is incorrect.
+My Sanity Checks :)
+- Check file header:
+```bash
+head -n 5 source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL | cat -vet
+```
+- Check file tail:
+```bash
+tail -n 10 source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL | cat -vet
+```
+- now I check for non-printable (binary) rubbish:
+```bash
+grep -a -o '[^[:print:][:space:]]' source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL | head
+```
+there was nothing weird coming out so I conclude that the STL file was indeed valid and in ASCII format! 
+therefore the error persisted because the file path was incorrect.
+The file path does not exist at runtime, so CADMesh is reading a non-existent or empty file and (correctly) errors out with the “STL files start with ‘solid’” message
+ls -l ../BACONCalibrationSimulation/STLFiles/source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL
+ls: ../BACONCalibrationSimulation/STLFiles/source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL: No such file or directory
+Fix: here I confirm correct path:
+```bash
+ls -l ../STLFiles/source_holder_assembly_axes_aligned_simplified_coursemeshcombined_v20250521.STL
+```
+then I updated path in code `DetectorConstruction.cc`: line199 before  
+ auto BasePlateMesh = CADMesh::TessellatedMesh::FromSTL(fSourceHolderFilePath);
+I created a folder named BACONCalibrationSimulation with a symlink to STL files:
+
+cd BACONCalibrationSimulation
+mkdir -p BACONCalibrationSimulation
+ln -s ../STLFiles BACONCalibrationSimulation/STLFiles
+Then I went and adjusted the root files path in all macros so we get the root files
+also removed anything saying "shard" in CMakelists.txt since there is no "shared" folder
+
+
 cmake -S . -B build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DWITH_GEANT4_UIVIS=ON \
