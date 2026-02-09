@@ -22,6 +22,8 @@ ask_yn() {
   fi
 }
 
+
+# Preflight
 echo "Preflight: Geant4"
 : "${GEANT4_BASE:?ERROR: export GEANT4_BASE first (e.g. ~/GEANT4/install-v11.4.0-5)}"
 if [[ ! -f "$GEANT4_BASE/lib/cmake/Geant4/Geant4Config.cmake" ]]; then
@@ -53,6 +55,8 @@ if ! ls "$HDF5_ROOT/lib"/libhdf5_cpp* >/dev/null 2>&1; then
   echo "       Rebuild HDF5 with: -DHDF5_BUILD_CPP_LIB=ON"
   exit 1
 fi
+
+
 
 echo "User choices"
 REMAGE_WORKDIR="${REMAGE_WORKDIR:-$HOME/Documents/REMAGE}"
@@ -126,6 +130,12 @@ cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
   -DCMAKE_OSX_ARCHITECTURES=arm64 \
   -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
+  -DPython3_EXECUTABLE="$Python3_EXECUTABLE" \
+  -DBUILD_TESTING=ON \
+  -DROOT_DIR="$ROOT_DIR" \
+  -DHDF5_DIR="$HDF5_DIR" \
+  -DHDF5_ROOT="$HDF5_ROOT" \
+  -DGeant4_DIR="$Geant4_DIR" \
   -DGeant4_DIR="$GEANT4_BASE/lib/cmake/Geant4" \
   -DHDF5_DIR="$HDF5_DIR" \
   -DCMAKE_PREFIX_PATH="$GEANT4_BASE;$HDF5_ROOT;/opt/homebrew" \
@@ -133,7 +143,9 @@ cmake -S "$REPO_DIR" -B "$BUILD_DIR" -G "$GENERATOR" \
   -DRMG_USE_BXDECAY0=OFF \
   -DRMG_BUILD_DOCS=OFF \
   -DRMG_BUILD_EXAMPLES=OFF \
-  -DBUILD_TESTING=OFF
+  -DBUILD_TESTING=OFF \
+  -DCMAKE_PREFIX_PATH="$HDF5_ROOT;$BXDECAY0_PREFIX;$GEANT4_BASE;/opt/homebrew/opt/root;/opt/homebrew" 
+
 
 echo
 echo "[3/5] Build (with retries)"
@@ -180,3 +192,5 @@ fi
 echo
 echo "DONE: remage $VER ready at:"
 echo "  $INSTALL_DIR"
+
+
